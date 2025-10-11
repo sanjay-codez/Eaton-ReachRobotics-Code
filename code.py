@@ -25,12 +25,30 @@ motor_right = servo.ContinuousServo(
     max_pulse=MAX_PULSE
 )
 
+
+# Add for small motor toggle (Port 1)
+motor_small = servo.ContinuousServo(
+    pwmio.PWMOut(gizmo.MOTOR_1, frequency=PWM_FREQ),
+    min_pulse=MIN_PULSE,
+    max_pulse=MAX_PULSE
+)
+
+small_motor_on = False  # motor state
+last_button_state = False  # debounce memory
+
+
 def apply_deadzone(v):
     return 0 if abs(v) < DEADZONE else v
 
 # --- Main loop ---
 while True:
     gizmo.refresh()
+
+    current_button_state = gizmo.buttons.b  # bottom green button on Logitech F310
+    if current_button_state and not last_button_state:
+        small_motor_on = not small_motor_on
+        motor_small.throttle = -1.0 if small_motor_on else 0.0
+    last_button_state = current_button_state
 
     # Read joystick axes
     forward = map_range(gizmo.axes.right_x, 0, 255, -1.0, 1.0)   # Up/down on left stick
